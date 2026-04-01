@@ -203,6 +203,86 @@
       .form-row { grid-template-columns: 1fr 1fr; }
       .add-btn { grid-column: 1 / -1; }
     }
+
+    /* ── タブレット ── */
+    @media (max-width: 768px) {
+      body { padding: 12px 12px 40px; }
+      .header { padding: 24px 0 20px; }
+      .header h1 { font-size: 2rem; }
+      .card { padding: 16px; }
+      .sheets-url-row { flex-wrap: wrap; }
+      .sheets-url-input { min-width: 100%; order: 1; }
+      .sheets-save-btn { order: 2; }
+      .sheets-sync-btn { order: 3; }
+      #resetSyncBtn { order: 4; }
+    }
+
+    /* ── スマホ ── */
+    @media (max-width: 480px) {
+      body { padding: 10px 10px 32px; }
+
+      .header { padding: 16px 0 14px; }
+      .header h1 { font-size: 1.6rem; }
+      .header p { font-size: 0.78rem; }
+      .header-eyebrow { font-size: 0.65rem; }
+
+      .card { padding: 14px; border-radius: 12px; margin-bottom: 12px; }
+
+      /* 為替レート：3列に */
+      .rate-grid { grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 14px; }
+      .rate-card { padding: 8px 4px; }
+      .rate-card .flag { font-size: 1.1rem; }
+      .rate-card .value { font-size: 0.88rem; }
+      .rate-card .code { font-size: 0.62rem; }
+      .rate-card .unit { font-size: 0.56rem; }
+      .rate-panel-header { flex-wrap: wrap; gap: 6px; }
+
+      /* 手動レート：2列 */
+      .manual-grid { grid-template-columns: 1fr 1fr; }
+
+      /* フォーム：全て縦1列に */
+      .form-row {
+        grid-template-columns: 1fr !important;
+        gap: 10px;
+      }
+      .add-btn {
+        grid-column: 1 !important;
+        height: 50px;
+        font-size: 1rem;
+        border-radius: 12px;
+      }
+
+      /* iOSの自動ズーム防止（16px以上に） */
+      .form-group input,
+      .form-group select {
+        font-size: 1rem;
+        padding: 13px 13px;
+      }
+      .jpy-display { font-size: 1rem !important; }
+
+      /* テーブル：文字小さく・余白詰める */
+      thead th { padding: 8px 6px; font-size: 0.62rem; }
+      tbody td { padding: 10px 6px; font-size: 0.8rem; }
+      .badge { font-size: 0.62rem; padding: 2px 6px; }
+
+      /* テーブルヘッダー：縦に */
+      .table-header { flex-wrap: wrap; gap: 8px; }
+      .export-btn { font-size: 0.75rem; padding: 6px 12px; }
+
+      /* Google Sheets設定 */
+      .sheets-card { padding: 14px; }
+      .sheets-title { font-size: 0.82rem; }
+      .sheets-url-row { flex-wrap: wrap; gap: 8px; }
+      .sheets-url-input { width: 100%; font-size: 0.85rem; }
+      .sheets-save-btn,
+      .sheets-sync-btn,
+      #resetSyncBtn { flex: 1; font-size: 0.78rem; padding: 8px 8px; }
+
+      /* 合計カード */
+      .total-card { padding: 18px 16px; border-radius: 12px; }
+      .total-value { font-size: 2rem; }
+      .total-label { font-size: 0.65rem; }
+    }
     .form-group label {
       display: block;
       font-size: 0.72rem;
@@ -512,32 +592,6 @@
     <p>ペルー・ボリビア・ブラジル・アルゼンチン・チリ・アメリカ・日本円 対応</p>
   </div>
 
-  <!-- Google Sheets 設定 -->
-  <div class="sheets-card">
-    <div class="sheets-card-header" onclick="toggleSheetSettings()" style="cursor:pointer;">
-      <div class="sheets-title">
-        <span class="icon">📊</span>
-        Google スプレッドシート 自動保存
-      </div>
-      <div style="display:flex;align-items:center;gap:10px;">
-        <span class="sync-status-badge no-url" id="syncBadge">未設定</span>
-        <span id="settingsToggleIcon" style="font-size:0.85rem;color:var(--green);font-weight:700;transition:transform 0.2s;">▼</span>
-      </div>
-    </div>
-    <div id="sheetsSettingsBody" style="display:none;margin-top:14px;">
-      <div class="sheets-url-row">
-        <input class="sheets-url-input" type="url" id="scriptUrlInput"
-               placeholder="Apps Script の URL をここに貼り付け（設定手順書を参照）">
-        <button class="sheets-save-btn" onclick="saveScriptUrl()">保存</button>
-        <button class="sheets-sync-btn" id="syncAllBtn" onclick="syncAllPending()" disabled>↑ 全て同期</button>
-      <button class="sheets-sync-btn" id="resetSyncBtn" onclick="resetAndResync()" style="background:#FEF3C7;border-color:#D97706;color:#92400E;">🔄 再同期</button>
-      </div>
-      <div style="margin-top:8px;display:flex;align-items:center;gap:12px;">
-        <span class="save-msg" id="urlSaveMsg"></span>
-      </div>
-    </div>
-  </div>
-
   <!-- Rate Panel -->
   <div class="card">
     <div class="rate-panel-header">
@@ -624,6 +678,32 @@
       <div class="total-count" id="totalCount">0件</div>
     </div>
     <div class="total-value" id="totalJpy">¥ 0</div>
+  </div>
+
+  <!-- Google Sheets 設定（ページ最下部） -->
+  <div class="sheets-card" style="margin-top:16px;">
+    <div class="sheets-card-header" onclick="toggleSheetSettings()" style="cursor:pointer;">
+      <div class="sheets-title">
+        <span class="icon">📊</span>
+        Google スプレッドシート 自動保存
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span class="sync-status-badge no-url" id="syncBadge">未設定</span>
+        <span id="settingsToggleIcon" style="font-size:0.85rem;color:var(--green);font-weight:700;transition:transform 0.2s;">▼</span>
+      </div>
+    </div>
+    <div id="sheetsSettingsBody" style="display:none;margin-top:14px;">
+      <div class="sheets-url-row">
+        <input class="sheets-url-input" type="url" id="scriptUrlInput"
+               placeholder="Apps Script の URL をここに貼り付け（設定手順書を参照）">
+        <button class="sheets-save-btn" onclick="saveScriptUrl()">保存</button>
+        <button class="sheets-sync-btn" id="syncAllBtn" onclick="syncAllPending()" disabled>↑ 全て同期</button>
+        <button class="sheets-sync-btn" id="resetSyncBtn" onclick="resetAndResync()" style="background:#FEF3C7;border-color:#D97706;color:#92400E;">🔄 再同期</button>
+      </div>
+      <div style="margin-top:8px;display:flex;align-items:center;gap:12px;">
+        <span class="save-msg" id="urlSaveMsg"></span>
+      </div>
+    </div>
   </div>
 
 </div>
