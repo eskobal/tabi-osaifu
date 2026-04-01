@@ -1,0 +1,1146 @@
+[index.html](https://github.com/user-attachments/files/26422508/index.html)
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>旅のお財布</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+    :root {
+      --bg:        #F4EFE8;
+      --surface:   #FFFFFF;
+      --surface2:  #FAF7F3;
+      --border:    #E8E0D6;
+      --text:      #1C1917;
+      --text-sub:  #78716C;
+      --text-mute: #A8A29E;
+      --accent:    #C25E38;
+      --accent-lt: #F2E6DF;
+      --green:     #2D6A4F;
+      --green-lt:  #D8EDDF;
+      --gold:      #B5860D;
+      --gold-lt:   #FEF3C7;
+      --shadow-sm: 0 1px 4px rgba(0,0,0,0.06), 0 2px 8px rgba(0,0,0,0.04);
+      --shadow-md: 0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.05);
+      --radius:    16px;
+      --radius-sm: 10px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+      background: var(--bg);
+      min-height: 100vh;
+      color: var(--text);
+      padding: 24px 20px 48px;
+    }
+
+    .container { max-width: 1020px; margin: 0 auto; }
+
+    /* ── Header ── */
+    .header {
+      text-align: center;
+      padding: 36px 0 32px;
+    }
+    .header-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--accent-lt);
+      color: var(--accent);
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 4px 12px;
+      border-radius: 99px;
+      margin-bottom: 14px;
+    }
+    .header h1 {
+      font-size: 2.4rem;
+      font-weight: 800;
+      color: var(--text);
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      margin-bottom: 8px;
+    }
+    .header h1 em {
+      font-style: normal;
+      color: var(--accent);
+    }
+    .header p {
+      color: var(--text-sub);
+      font-size: 0.88rem;
+      font-weight: 500;
+    }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      padding: 24px;
+      margin-bottom: 16px;
+    }
+    .card-title {
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-mute);
+      margin-bottom: 16px;
+    }
+
+    /* ── Rate Panel ── */
+    .rate-panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .rate-status { font-size: 0.78rem; color: var(--text-mute); }
+    .rate-status.ok { color: var(--green); font-weight: 500; }
+    .rate-status.err { color: #B91C1C; font-weight: 500; }
+
+    .rate-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    .rate-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px;
+      text-align: center;
+      transition: box-shadow 0.15s;
+    }
+    .rate-card:hover { box-shadow: var(--shadow-sm); }
+    .rate-card .flag { font-size: 1.5rem; line-height: 1; }
+    .rate-card .code {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      color: var(--text-sub);
+      margin: 4px 0 2px;
+    }
+    .rate-card .value {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: var(--accent);
+      letter-spacing: -0.02em;
+    }
+    .rate-card .unit { font-size: 0.62rem; color: var(--text-mute); margin-top: 1px; }
+
+    .refresh-btn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text-sub);
+      padding: 6px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 600;
+      transition: all 0.15s;
+    }
+    .refresh-btn:hover { background: var(--accent-lt); color: var(--accent); border-color: var(--accent); }
+    .refresh-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* Manual rates */
+    .manual-rates {
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+    .manual-rates-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-mute);
+      margin-bottom: 10px;
+      letter-spacing: 0.04em;
+    }
+    .manual-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+      gap: 8px;
+    }
+    .manual-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 10px;
+    }
+    .manual-item label { font-size: 0.78rem; font-weight: 600; color: var(--text-sub); min-width: 44px; }
+    .manual-item input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--text);
+      padding: 0;
+      font-size: 0.82rem;
+      font-weight: 500;
+      width: 70px;
+      font-family: inherit;
+    }
+    .manual-item input:focus { outline: none; }
+    .manual-item span { font-size: 0.72rem; color: var(--text-mute); }
+
+    /* ── Form ── */
+    .form-row {
+      display: grid;
+      grid-template-columns: 148px 1fr 164px 128px 120px auto;
+      gap: 10px;
+      align-items: end;
+    }
+    @media (max-width: 820px) {
+      .form-row { grid-template-columns: 1fr 1fr; }
+      .add-btn { grid-column: 1 / -1; }
+    }
+
+    /* ── タブレット ── */
+    @media (max-width: 768px) {
+      body { padding: 12px 12px 40px; }
+      .header { padding: 24px 0 20px; }
+      .header h1 { font-size: 2rem; }
+      .card { padding: 16px; }
+      .sheets-url-row { flex-wrap: wrap; }
+      .sheets-url-input { min-width: 100%; order: 1; }
+      .sheets-save-btn { order: 2; }
+      .sheets-sync-btn { order: 3; }
+      #resetSyncBtn { order: 4; }
+    }
+
+    /* ── スマホ ── */
+    @media (max-width: 480px) {
+      body { padding: 10px 10px 32px; }
+
+      .header { padding: 16px 0 14px; }
+      .header h1 { font-size: 1.6rem; }
+      .header p { font-size: 0.78rem; }
+      .header-eyebrow { font-size: 0.65rem; }
+
+      .card { padding: 14px; border-radius: 12px; margin-bottom: 12px; }
+
+      /* 為替レート：3列に */
+      .rate-grid { grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 14px; }
+      .rate-card { padding: 8px 4px; }
+      .rate-card .flag { font-size: 1.1rem; }
+      .rate-card .value { font-size: 0.88rem; }
+      .rate-card .code { font-size: 0.62rem; }
+      .rate-card .unit { font-size: 0.56rem; }
+      .rate-panel-header { flex-wrap: wrap; gap: 6px; }
+
+      /* 手動レート：2列 */
+      .manual-grid { grid-template-columns: 1fr 1fr; }
+
+      /* フォーム：全て縦1列に */
+      .form-row {
+        grid-template-columns: 1fr !important;
+        gap: 10px;
+      }
+      .add-btn {
+        grid-column: 1 !important;
+        height: 50px;
+        font-size: 1rem;
+        border-radius: 12px;
+      }
+
+      /* iOSの自動ズーム防止（16px以上に） */
+      .form-group input,
+      .form-group select {
+        font-size: 1rem;
+        padding: 13px 13px;
+      }
+      .jpy-display { font-size: 1rem !important; }
+
+      /* テーブル：文字小さく・余白詰める */
+      thead th { padding: 8px 6px; font-size: 0.62rem; }
+      tbody td { padding: 10px 6px; font-size: 0.8rem; }
+      .badge { font-size: 0.62rem; padding: 2px 6px; }
+
+      /* テーブルヘッダー：縦に */
+      .table-header { flex-wrap: wrap; gap: 8px; }
+      .export-btn { font-size: 0.75rem; padding: 6px 12px; }
+
+      /* Google Sheets設定 */
+      .sheets-card { padding: 14px; }
+      .sheets-title { font-size: 0.82rem; }
+      .sheets-url-row { flex-wrap: wrap; gap: 8px; }
+      .sheets-url-input { width: 100%; font-size: 0.85rem; }
+      .sheets-save-btn,
+      .sheets-sync-btn,
+      #resetSyncBtn { flex: 1; font-size: 0.78rem; padding: 8px 8px; }
+
+      /* 合計カード */
+      .total-card { padding: 18px 16px; border-radius: 12px; }
+      .total-value { font-size: 2rem; }
+      .total-label { font-size: 0.65rem; }
+    }
+    .form-group label {
+      display: block;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      color: var(--text-sub);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+    }
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      background: var(--surface2);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      padding: 10px 13px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      font-family: inherit;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+    .form-group input::placeholder { color: var(--text-mute); }
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(194,94,56,0.12);
+      background: var(--surface);
+    }
+    .form-group select option { background: #fff; color: #1C1917; }
+    .jpy-display {
+      background: var(--gold-lt) !important;
+      border-color: #D97706 !important;
+      color: var(--gold) !important;
+      font-weight: 800 !important;
+      font-size: 1rem !important;
+    }
+
+    .add-btn {
+      background: var(--accent);
+      border: none;
+      color: #fff;
+      padding: 10px 22px;
+      border-radius: var(--radius-sm);
+      font-weight: 700;
+      font-size: 0.9rem;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+      white-space: nowrap;
+      height: 42px;
+      letter-spacing: 0.02em;
+      box-shadow: 0 2px 8px rgba(194,94,56,0.25);
+    }
+    .add-btn:hover { background: #A84D2B; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(194,94,56,0.3); }
+    .add-btn:active { transform: translateY(0); }
+
+    /* ── Table ── */
+    .table-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .export-btn {
+      background: var(--green-lt);
+      border: 1.5px solid var(--green);
+      color: var(--green);
+      padding: 7px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 700;
+      font-family: inherit;
+      transition: all 0.15s;
+      letter-spacing: 0.02em;
+    }
+    .export-btn:hover { background: var(--green); color: #fff; }
+
+    .table-wrap { overflow-x: auto; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+    thead th {
+      text-align: left;
+      padding: 8px 14px 10px;
+      color: var(--text-mute);
+      font-weight: 700;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      border-bottom: 2px solid var(--border);
+    }
+    tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background 0.12s;
+    }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: var(--surface2); }
+    tbody td { padding: 12px 14px; color: var(--text); font-weight: 500; }
+    tbody td.jpy { color: var(--gold); font-weight: 800; font-size: 0.92rem; }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 9px;
+      border-radius: 99px;
+      font-weight: 700;
+      font-size: 0.7rem;
+      letter-spacing: 0.04em;
+    }
+    .badge-JPY { background: #F3F4F6; color: #374151; border: 1px solid #D1D5DB; }
+    .badge-USD { background: #DBEAFE; color: #1D4ED8; }
+    .badge-PEN { background: #FEE2E2; color: #B91C1C; }
+    .badge-BOB { background: #FEF3C7; color: #92400E; }
+    .badge-BRL { background: #D1FAE5; color: #065F46; }
+    .badge-ARS { background: #EDE9FE; color: #5B21B6; }
+    .badge-CLP { background: #FFE4E6; color: #BE123C; }
+
+    .del-btn {
+      background: none;
+      border: none;
+      color: var(--text-mute);
+      cursor: pointer;
+      padding: 4px 7px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      transition: all 0.15s;
+    }
+    .del-btn:hover { background: #FEE2E2; color: #B91C1C; }
+
+    .empty-msg {
+      text-align: center;
+      color: var(--text-mute);
+      padding: 40px 20px;
+      font-size: 0.88rem;
+    }
+    .empty-msg .empty-icon { font-size: 2rem; margin-bottom: 8px; display: block; }
+
+    /* ── Total ── */
+    .total-card {
+      background: var(--text);
+      border: none;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-md);
+      padding: 28px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0;
+    }
+    .total-left {}
+    .total-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.45);
+      margin-bottom: 4px;
+    }
+    .total-count {
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.4);
+      margin-top: 4px;
+    }
+    .total-value {
+      font-size: 2.6rem;
+      font-weight: 800;
+      color: #F9C74F;
+      letter-spacing: -0.03em;
+      line-height: 1;
+    }
+
+    /* Spinner */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner {
+      display: inline-block;
+      width: 11px; height: 11px;
+      border: 2px solid rgba(194,94,56,0.2);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 4px;
+    }
+
+    /* ── Google Sheets 設定 ── */
+    .sheets-card {
+      background: linear-gradient(135deg, #F0FDF4, #DCFCE7);
+      border: 1.5px solid #86EFAC;
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      margin-bottom: 16px;
+    }
+    .sheets-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+    .sheets-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--green);
+    }
+    .sheets-title .icon { font-size: 1.2rem; }
+    .sync-status-badge {
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 99px;
+    }
+    .sync-status-badge.all-synced { background: var(--green-lt); color: var(--green); }
+    .sync-status-badge.pending    { background: #FEF3C7; color: #92400E; }
+    .sync-status-badge.no-url     { background: #F3F4F6; color: #6B7280; }
+
+    .sheets-url-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .sheets-url-input {
+      flex: 1;
+      background: #fff;
+      border: 1.5px solid #86EFAC;
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      padding: 9px 13px;
+      font-size: 0.85rem;
+      font-family: inherit;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .sheets-url-input:focus {
+      outline: none;
+      border-color: var(--green);
+      box-shadow: 0 0 0 3px rgba(45,106,79,0.12);
+    }
+    .sheets-url-input::placeholder { color: #A8A29E; }
+    .sheets-save-btn {
+      background: var(--green);
+      border: none;
+      color: #fff;
+      padding: 9px 18px;
+      border-radius: var(--radius-sm);
+      font-size: 0.85rem;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background 0.15s;
+      white-space: nowrap;
+    }
+    .sheets-save-btn:hover { background: #1F4D38; }
+    .sheets-sync-btn {
+      background: #fff;
+      border: 1.5px solid var(--green);
+      color: var(--green);
+      padding: 9px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 0.85rem;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .sheets-sync-btn:hover { background: var(--green-lt); }
+    .sheets-sync-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .save-msg { font-size: 0.78rem; color: var(--green); font-weight: 600; min-width: 80px; }
+
+    /* ── Sync indicators in table ── */
+    .sync-dot {
+      display: inline-block;
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      margin-right: 4px;
+      vertical-align: middle;
+    }
+    .sync-dot.synced  { background: var(--green); }
+    .sync-dot.pending { background: #F59E0B; }
+    .sync-dot.error   { background: #EF4444; }
+
+    /* ── LocalStorage notice ── */
+    .storage-notice {
+      text-align: center;
+      font-size: 0.75rem;
+      color: var(--text-mute);
+      padding: 12px 0 0;
+    }
+    .storage-notice strong { color: var(--text-sub); }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-eyebrow">✈️ 旅行経費管理ツール</div>
+    <h1>旅の<em>お財布</em></h1>
+    <p>ペルー・ボリビア・ブラジル・アルゼンチン・チリ・アメリカ・日本円 対応</p>
+  </div>
+
+  <!-- Rate Panel -->
+  <div class="card">
+    <div class="rate-panel-header">
+      <div class="card-title" style="margin-bottom:0;">💱 為替レート（対日本円）</div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span class="rate-status" id="rateStatus">読み込み中...</span>
+        <button class="refresh-btn" id="refreshBtn" onclick="fetchRates()">↻ 更新</button>
+      </div>
+    </div>
+    <div style="height:16px;"></div>
+    <div class="rate-grid" id="rateGrid"></div>
+    <div class="manual-rates">
+      <div class="manual-rates-label">手動でレートを修正</div>
+      <div class="manual-grid" id="manualGrid"></div>
+    </div>
+  </div>
+
+  <!-- Input Form -->
+  <div class="card">
+    <div class="card-title">＋ 経費を追加</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>日付</label>
+        <input type="date" id="inputDate">
+      </div>
+      <div class="form-group">
+        <label>内容</label>
+        <input type="text" id="inputDesc" placeholder="例：ランチ、ホテル、航空券…">
+      </div>
+      <div class="form-group">
+        <label>通貨</label>
+        <select id="inputCurrency" onchange="calcJpy()">
+          <option value="JPY">🇯🇵 JPY（日本円）</option>
+          <option value="USD">🇺🇸 USD（米ドル）</option>
+          <option value="PEN">🇵🇪 PEN（ペルーソル）</option>
+          <option value="BOB">🇧🇴 BOB（ボリビアーノ）</option>
+          <option value="BRL">🇧🇷 BRL（ブラジルレアル）</option>
+          <option value="ARS">🇦🇷 ARS（アルゼンチンペソ）</option>
+          <option value="CLP">🇨🇱 CLP（チリペソ）</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>現地金額</label>
+        <input type="number" id="inputAmount" placeholder="0" oninput="calcJpy()" min="0" step="any">
+      </div>
+      <div class="form-group">
+        <label>日本円（自動換算）</label>
+        <input type="number" id="inputJpy" class="jpy-display" placeholder="¥ 0" readonly>
+      </div>
+      <button class="add-btn" onclick="addExpense()">追加</button>
+    </div>
+  </div>
+
+  <!-- Expense Table -->
+  <div class="card">
+    <div class="table-header">
+      <div class="card-title" style="margin-bottom:0;">経費一覧</div>
+      <button class="export-btn" onclick="exportExcel()">↓ Excelでダウンロード</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>日付</th>
+            <th>内容</th>
+            <th>通貨</th>
+            <th style="text-align:right">現地金額</th>
+            <th style="text-align:right">日本円</th>
+            <th style="text-align:center">同期</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="expenseTableBody">
+          <tr><td colspan="7" class="empty-msg"><span class="empty-icon">🗒️</span>まだ経費が入力されていません</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Total -->
+  <div class="total-card">
+    <div class="total-left">
+      <div class="total-label">合計金額（日本円換算）</div>
+      <div class="total-count" id="totalCount">0件</div>
+    </div>
+    <div class="total-value" id="totalJpy">¥ 0</div>
+  </div>
+
+  <!-- Google Sheets 設定（ページ最下部） -->
+  <div class="sheets-card" style="margin-top:16px;">
+    <div class="sheets-card-header" onclick="toggleSheetSettings()" style="cursor:pointer;">
+      <div class="sheets-title">
+        <span class="icon">📊</span>
+        Google スプレッドシート 自動保存
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span class="sync-status-badge no-url" id="syncBadge">未設定</span>
+        <span id="settingsToggleIcon" style="font-size:0.85rem;color:var(--green);font-weight:700;transition:transform 0.2s;">▼</span>
+      </div>
+    </div>
+    <div id="sheetsSettingsBody" style="display:none;margin-top:14px;">
+      <div class="sheets-url-row">
+        <input class="sheets-url-input" type="url" id="scriptUrlInput"
+               placeholder="Apps Script の URL をここに貼り付け（設定手順書を参照）">
+        <button class="sheets-save-btn" onclick="saveScriptUrl()">保存</button>
+        <button class="sheets-sync-btn" id="syncAllBtn" onclick="syncAllPending()" disabled>↑ 全て同期</button>
+        <button class="sheets-sync-btn" id="resetSyncBtn" onclick="resetAndResync()" style="background:#FEF3C7;border-color:#D97706;color:#92400E;">🔄 再同期</button>
+      </div>
+      <div style="margin-top:8px;display:flex;align-items:center;gap:12px;">
+        <span class="save-msg" id="urlSaveMsg"></span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// =====================================================
+// データ・設定
+// =====================================================
+const CURRENCIES = [
+  { code: 'JPY', name: '日本円',           flag: '🇯🇵', country: '日本' },
+  { code: 'USD', name: '米ドル',           flag: '🇺🇸', country: 'アメリカ' },
+  { code: 'PEN', name: 'ペルーソル',       flag: '🇵🇪', country: 'ペルー' },
+  { code: 'BOB', name: 'ボリビアーノ',    flag: '🇧🇴', country: 'ボリビア' },
+  { code: 'BRL', name: 'ブラジルレアル',  flag: '🇧🇷', country: 'ブラジル' },
+  { code: 'ARS', name: 'アルゼンチンペソ',flag: '🇦🇷', country: 'アルゼンチン' },
+  { code: 'CLP', name: 'チリペソ',        flag: '🇨🇱', country: 'チリ' },
+];
+
+// 1外貨 = X円 のレート
+let rates = { JPY: 1, USD: 149, PEN: 40, BOB: 21, BRL: 29, ARS: 0.17, CLP: 0.16 };
+let expenses = [];
+let scriptUrl = '';
+
+// =====================================================
+// localStorage 保存・読み込み
+// =====================================================
+function saveData() {
+  try {
+    localStorage.setItem('tabiOsaifu_expenses', JSON.stringify(expenses));
+    localStorage.setItem('tabiOsaifu_scriptUrl', scriptUrl);
+  } catch(e) {}
+}
+
+function loadData() {
+  try {
+    const saved = localStorage.getItem('tabiOsaifu_expenses');
+    if (saved) expenses = JSON.parse(saved);
+    const url = localStorage.getItem('tabiOsaifu_scriptUrl');
+    if (url) {
+      scriptUrl = url;
+      document.getElementById('scriptUrlInput').value = url;
+    }
+  } catch(e) {}
+}
+
+// =====================================================
+// Google Sheets 同期
+// =====================================================
+function toggleSheetSettings() {
+  const body = document.getElementById('sheetsSettingsBody');
+  const icon = document.getElementById('settingsToggleIcon');
+  const isOpen = body.style.display !== 'none';
+  body.style.display = isOpen ? 'none' : 'block';
+  icon.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+}
+
+function saveScriptUrl() {
+  scriptUrl = document.getElementById('scriptUrlInput').value.trim();
+  saveData();
+  const msg = document.getElementById('urlSaveMsg');
+  if (scriptUrl) {
+    msg.textContent = '✓ 保存しました';
+    setTimeout(() => { msg.textContent = ''; }, 2500);
+    updateSyncBadge();
+    syncAllPending();
+  } else {
+    msg.textContent = 'URLを入力してください';
+    msg.style.color = '#EF4444';
+    setTimeout(() => { msg.textContent = ''; msg.style.color = ''; }, 2500);
+  }
+}
+
+async function syncExpense(expense) {
+  if (!scriptUrl || expense.synced === true) return;
+  expense.synced = 'syncing';
+  renderTable();
+  try {
+    await fetch(scriptUrl, {
+      method: 'POST',
+      mode: 'no-cors',
+      body: JSON.stringify({
+        action: 'add',
+        id:     expense.id,
+        date:   expense.date,
+        desc:   expense.desc,
+        cur:    expense.cur,
+        amount: expense.amount,
+        jpy:    expense.jpy
+      }),
+      headers: { 'Content-Type': 'application/json' }
+    });
+    // no-cors では res.ok が常にtrue相当になるため成功とみなす
+    expense.synced = true;
+  } catch(e) {
+    expense.synced = 'error';
+  }
+  saveData();
+  renderTable();
+  updateSyncBadge();
+}
+
+async function syncDelete(id) {
+  if (!scriptUrl) return;
+  try {
+    await fetch(scriptUrl, {
+      method: 'POST',
+      mode: 'no-cors',
+      body: JSON.stringify({ action: 'delete', id: id }),
+      headers: { 'Content-Type': 'application/json' }
+    });
+  } catch(e) {
+    // 削除失敗はサイレントに処理（ツール側では既に削除済み）
+  }
+}
+
+async function resetAndResync() {
+  if (!confirm(
+    '再同期を実行します。\n\n' +
+    '【事前にやること】\n' +
+    'Google スプレッドシートの「経費一覧」シートを削除してください。\n\n' +
+    '削除しましたか？　OKで再同期を開始します。'
+  )) return;
+
+  // 全経費の同期フラグをリセット
+  expenses.forEach(e => { e.synced = false; });
+  saveData();
+  renderTable();
+  updateSyncBadge();
+
+  // 全件を再送信
+  await syncAllPending();
+  alert('再同期が完了しました！');
+}
+
+async function syncAllPending() {
+  if (!scriptUrl) return;
+  const btn = document.getElementById('syncAllBtn');
+  btn.disabled = true;
+  const pending = expenses.filter(e => e.synced !== true);
+  for (const exp of pending) {
+    await syncExpense(exp);
+  }
+  btn.disabled = false;
+  updateSyncBadge();
+}
+
+function updateSyncBadge() {
+  const badge = document.getElementById('syncBadge');
+  const btn   = document.getElementById('syncAllBtn');
+  if (!scriptUrl) {
+    badge.className = 'sync-status-badge no-url';
+    badge.textContent = '未設定';
+    btn.disabled = true;
+    return;
+  }
+  const pending = expenses.filter(e => e.synced !== true).length;
+  if (pending === 0) {
+    badge.className = 'sync-status-badge all-synced';
+    badge.textContent = '✓ 全て同期済み';
+    btn.disabled = true;
+  } else {
+    badge.className = 'sync-status-badge pending';
+    badge.textContent = `未同期 ${pending}件`;
+    btn.disabled = false;
+  }
+}
+
+// =====================================================
+// 為替レート取得
+// =====================================================
+async function fetchRates() {
+  const btn = document.getElementById('refreshBtn');
+  const statusEl = document.getElementById('rateStatus');
+  btn.disabled = true;
+  statusEl.className = 'rate-status';
+  statusEl.innerHTML = '<span class="spinner"></span>取得中...';
+
+  try {
+    // open.er-api.com: 1 JPYあたりの各通貨量を取得
+    const res = await fetch('https://open.er-api.com/v6/latest/JPY');
+    if (!res.ok) throw new Error('Network error');
+    const data = await res.json();
+
+    if (data.result === 'success') {
+      const r = data.rates;
+      CURRENCIES.forEach(c => {
+        if (r[c.code]) {
+          // 1 JPY = r[c.code] 外貨 → 1外貨 = 1/r[c.code] JPY
+          rates[c.code] = 1 / r[c.code];
+        }
+      });
+      const now = new Date().toLocaleTimeString('ja-JP');
+      statusEl.className = 'rate-status ok';
+      statusEl.textContent = `✓ 最終更新: ${now}`;
+    } else {
+      throw new Error('API error');
+    }
+  } catch (e) {
+    // フォールバック: exchangerate-api
+    try {
+      const res2 = await fetch('https://api.exchangerate-api.com/v4/latest/JPY');
+      const data2 = await res2.json();
+      CURRENCIES.forEach(c => {
+        if (data2.rates && data2.rates[c.code]) {
+          rates[c.code] = 1 / data2.rates[c.code];
+        }
+      });
+      const now = new Date().toLocaleTimeString('ja-JP');
+      statusEl.className = 'rate-status ok';
+      statusEl.textContent = `✓ 最終更新: ${now}`;
+    } catch (e2) {
+      statusEl.className = 'rate-status err';
+      statusEl.textContent = '⚠ オフライン（手動入力で調整可）';
+    }
+  }
+
+  renderRateCards();
+  updateManualInputs();
+  calcJpy();
+  btn.disabled = false;
+}
+
+// =====================================================
+// レートカード描画
+// =====================================================
+function renderRateCards() {
+  const grid = document.getElementById('rateGrid');
+  grid.innerHTML = CURRENCIES.filter(c => c.code !== 'JPY').map(c => {
+    const r = rates[c.code];
+    const display = r >= 1 ? r.toFixed(2) : r.toFixed(4);
+    return `
+      <div class="rate-card">
+        <div class="flag">${c.flag}</div>
+        <div class="code">${c.code}</div>
+        <div class="value">¥${display}</div>
+        <div class="unit">1 ${c.code} あたり</div>
+      </div>`;
+  }).join('');
+}
+
+function updateManualInputs() {
+  const grid = document.getElementById('manualGrid');
+  grid.innerHTML = CURRENCIES.filter(c => c.code !== 'JPY').map(c => `
+    <div class="manual-item">
+      <label>${c.flag} ${c.code}</label>
+      <input type="number" id="rate_${c.code}" value="${rates[c.code].toFixed(4)}"
+             step="any" min="0"
+             onchange="rates['${c.code}']=parseFloat(this.value)||rates['${c.code}']; renderRateCards(); calcJpy();">
+      <span style="font-size:0.75rem;color:#777;">円</span>
+    </div>`).join('');
+}
+
+// =====================================================
+// 日本円自動計算
+// =====================================================
+function calcJpy() {
+  const amt = parseFloat(document.getElementById('inputAmount').value) || 0;
+  const cur = document.getElementById('inputCurrency').value;
+  const jpy = Math.round(amt * (rates[cur] || 0));
+  document.getElementById('inputJpy').value = jpy > 0 ? jpy : '';
+}
+
+// =====================================================
+// 経費追加
+// =====================================================
+function addExpense() {
+  const date    = document.getElementById('inputDate').value;
+  const desc    = document.getElementById('inputDesc').value.trim();
+  const cur     = document.getElementById('inputCurrency').value;
+  const amount  = parseFloat(document.getElementById('inputAmount').value);
+  const jpy     = Math.round(amount * (rates[cur] || 0));
+
+  if (!date)   { alert('日付を入力してください'); return; }
+  if (!desc)   { alert('内容を入力してください'); return; }
+  if (!amount || amount <= 0) { alert('金額を入力してください'); return; }
+
+  const expense = { date, desc, cur, amount, jpy, id: Date.now(), synced: false };
+  expenses.push(expense);
+  saveData();
+  renderTable();
+  renderTotal();
+  updateSyncBadge();
+
+  // Google Sheets に自動送信
+  if (scriptUrl) syncExpense(expense);
+
+  // フォームリセット（日付・通貨は維持）
+  document.getElementById('inputDesc').value = '';
+  document.getElementById('inputAmount').value = '';
+  document.getElementById('inputJpy').value = '';
+}
+
+// =====================================================
+// 日付フォーマット（表示用）
+// =====================================================
+function formatDate(dateStr) {
+  if (!dateStr) return '';
+  const [y, m, d] = dateStr.split('-');
+  return `${y}/${m}/${d}`;
+}
+
+// =====================================================
+// テーブル描画
+// =====================================================
+function renderTable() {
+  const tbody = document.getElementById('expenseTableBody');
+  if (expenses.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" class="empty-msg">まだ経費が入力されていません</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = [...expenses].reverse().map(e => {
+    const amtDisplay = e.cur === 'CLP' || e.cur === 'ARS'
+      ? Number(e.amount).toLocaleString('ja-JP', { maximumFractionDigits: 0 })
+      : Number(e.amount).toLocaleString('ja-JP', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    let syncCell;
+    if (!scriptUrl) {
+      syncCell = `<td style="text-align:center;color:var(--text-mute);font-size:0.75rem;">―</td>`;
+    } else if (e.synced === true) {
+      syncCell = `<td style="text-align:center" title="同期済み"><span class="sync-dot synced"></span></td>`;
+    } else if (e.synced === 'syncing') {
+      syncCell = `<td style="text-align:center"><span class="spinner"></span></td>`;
+    } else if (e.synced === 'error') {
+      syncCell = `<td style="text-align:center" title="同期失敗"><span class="sync-dot error"></span></td>`;
+    } else {
+      syncCell = `<td style="text-align:center" title="未同期"><span class="sync-dot pending"></span></td>`;
+    }
+    return `
+      <tr>
+        <td>${formatDate(e.date)}</td>
+        <td>${e.desc}</td>
+        <td class="currency-badge"><span class="badge badge-${e.cur}">${e.cur}</span></td>
+        <td style="text-align:right">${amtDisplay}</td>
+        <td class="jpy" style="text-align:right">¥${e.jpy.toLocaleString('ja-JP')}</td>
+        ${syncCell}
+        <td><button class="del-btn" onclick="deleteExpense(${e.id})" title="削除">✕</button></td>
+      </tr>`;
+  }).join('');
+}
+
+function deleteExpense(id) {
+  if (!confirm('この経費を削除しますか？')) return;
+  const target = expenses.find(e => e.id === id);
+  expenses = expenses.filter(e => e.id !== id);
+  saveData();
+  renderTable();
+  renderTotal();
+  updateSyncBadge();
+  // スプレッドシートに同期済みの場合のみ削除リクエストを送信
+  if (scriptUrl && target && target.synced === true) {
+    syncDelete(id);
+  }
+}
+
+// =====================================================
+// 合計
+// =====================================================
+function renderTotal() {
+  const total = expenses.reduce((sum, e) => sum + e.jpy, 0);
+  document.getElementById('totalJpy').textContent = '¥' + total.toLocaleString('ja-JP');
+  document.getElementById('totalCount').textContent = expenses.length + '件';
+}
+
+// =====================================================
+// Excel エクスポート
+// =====================================================
+function exportExcel() {
+  if (expenses.length === 0) { alert('経費データがありません'); return; }
+
+  const wb = XLSX.utils.book_new();
+
+  // メインシート
+  const header = ['日付', '内容', '通貨', '現地金額', '日本円'];
+  const rows = expenses.map(e => [
+    e.date, e.desc, e.cur, e.amount, e.jpy
+  ]);
+  const total = expenses.reduce((s, e) => s + e.jpy, 0);
+  rows.push(['', '', '', '合計（円）', total]);
+
+  const ws = XLSX.utils.aoa_to_sheet([header, ...rows]);
+
+  // 列幅
+  ws['!cols'] = [
+    { wch: 14 }, { wch: 28 }, { wch: 10 }, { wch: 14 }, { wch: 14 }
+  ];
+
+  XLSX.utils.book_append_sheet(wb, ws, '経費一覧');
+
+  // 為替レートシート
+  const rateHeader = ['通貨コード', '通貨名', '国', '1単位あたり日本円'];
+  const rateRows = CURRENCIES.map(c => [c.code, c.name, c.country, rates[c.code]]);
+  const ws2 = XLSX.utils.aoa_to_sheet([rateHeader, ...rateRows]);
+  ws2['!cols'] = [{ wch: 12 }, { wch: 20 }, { wch: 16 }, { wch: 20 }];
+  XLSX.utils.book_append_sheet(wb, ws2, '為替レート');
+
+  // ダウンロード
+  const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+  XLSX.writeFile(wb, `南米旅行経費_${today}.xlsx`);
+}
+
+// =====================================================
+// 初期化
+// =====================================================
+window.addEventListener('load', () => {
+  // 今日の日付をデフォルト設定
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('inputDate').value = today;
+
+  // localStorageからデータ復元
+  loadData();
+
+  // URL設定済みなら設定パネルを閉じておく、未設定なら開く
+  if (scriptUrl) {
+    document.getElementById('sheetsSettingsBody').style.display = 'none';
+    document.getElementById('settingsToggleIcon').style.transform = 'rotate(0deg)';
+  } else {
+    document.getElementById('sheetsSettingsBody').style.display = 'block';
+    document.getElementById('settingsToggleIcon').style.transform = 'rotate(180deg)';
+  }
+
+  // レートカードとマニュアル入力欄を描画
+  renderRateCards();
+  updateManualInputs();
+  renderTable();
+  renderTotal();
+  updateSyncBadge();
+
+  // 為替レート取得
+  fetchRates();
+
+  // 未同期データがあれば自動で再送信
+  if (scriptUrl) {
+    const pending = expenses.filter(e => e.synced !== true).length;
+    if (pending > 0) syncAllPending();
+  }
+});
+</script>
+</body>
+</html>
